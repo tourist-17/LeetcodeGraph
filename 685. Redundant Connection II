@@ -1,0 +1,90 @@
+Approach
+case 1 => form a cycle
+case 2 => a node have 2 parent
+case 3 => case 1 + case 2
+
+to understand this problem USE the given comments properly
+
+Complexity
+Time complexity: O(N * long(N))
+Space complexity: O(N)
+Code
+/*
+Possibilities 
+
+case 1 => form a cycle
+case 2 => a node have 2 parent
+case 3 => case 1 + case 2 
+
+*/
+
+
+class Solution {
+public:
+vector<int>path, vis;
+vector<vector<int>>edg;
+int last;
+unordered_map<int,vector<int>>mp;
+    vector<int> findRedundantDirectedConnection(vector<vector<int>>& edges) {
+        int n = edges.size();
+        vector<int>ind(n+1,-1); 
+        vector<int>par;
+        last = -1;
+        mp.clear();
+        map<vector<int>,int>mp1;
+        for(int i = 0;i < edges.size();i++) {
+            mp1[{edges[i][0],edges[i][1]}]=i; // store index of corresponding edges;
+            mp[edges[i][0]].push_back(edges[i][1]); // building graph
+            if(ind[edges[i][1]] != -1) {par.push_back(ind[edges[i][1]]); // if  indgree is greater than one then it has 2 parent
+par.push_back(i);}
+            ind[edges[i][1]] = i;
+        }
+        path.resize(n+1,-1);
+        vis.resize(n+1,-1);
+        edg.clear();
+        bool ok = false;
+        for(int i = 1;i <= n;i++) { // when one node have no parent
+            if(ind[i] == -1) { // no parent
+                dfs(i);
+                ok =true;
+                break;
+            }
+        }
+        if(!ok) { // when all node have atleast one parent
+            for(int i = 1;i <= n;i++) {
+            if(vis[i] == -1) { // not visited yet
+                dfs(i);
+            }
+        }
+        }
+        int ans = -1;
+        if(par.size() && edg.size()) { // when graph have both cycle and a node have 2 parent
+            if(find(edg.begin() , edg.end(), edges[par[0]]) != edg.end()){ return edges[par[0]];}
+            else return edges[par[1]];
+        }
+        else if(par.size()) return edges[par[1]]; //a node have 2 parent
+        else { // form a cycle
+            ans = -1;
+            for(auto i : edg) { // for each edges in cycle find the index of edge with max index tha are already present in cycle
+                ans = max(ans , mp1[i]);
+            }
+        }
+        return edges[ans];
+    }
+private:
+bool dfs(int node) {
+    // true refers that the current edges belong to cycle
+    // while false inverse of it
+    if(vis[node] == 1) {last = node;return true;} // cycle detect
+    vis[node] = 1;
+    for(auto i : mp[node]) {
+        if(dfs(i)) {
+            edg.push_back({node, i}); // track the edges of cyclic path
+            if(node == last) return false;
+            return true;
+        }
+    }
+    vis[node] = 0;
+    return false;
+}
+};
